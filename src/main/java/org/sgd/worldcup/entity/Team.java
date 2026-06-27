@@ -1,9 +1,23 @@
 package org.sgd.worldcup.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -15,7 +29,9 @@ import java.util.Set;
         @UniqueConstraint(columnNames = "name"),
         @UniqueConstraint(columnNames = "country_code")
 })
-@Data
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -37,16 +53,35 @@ public class Team {
     @Size(max = 50, message = "Confederation cannot exceed 50 characters")
     private String confederation;
 
+    @Size(max = 100, message = "Normalised name cannot exceed 100 characters")
+    @Column(name= "name_normalised", length = 100)
+    private String nameNormalised;
+
+    @Size(max = 50, message = "Continent cannot exceed 50 characters")
+    @Column(length = 50)
+    private String continent;
+
+    @Size(max = 16, message = "Flag icon cannot exceed 16 characters")
+    @Column(name = "flag_icon", length = 16)
+    private String flagIcon;
+
+    @Column(nullable = false)
+    private boolean placeholder = false;
+
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
     private Set<Player> players;
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
     private Set<GroupTeam> groupTeams;
 
     @OneToMany(mappedBy = "homeTeam")
+    @ToString.Exclude
     private Set<Match> homeMatches;
 
     @OneToMany(mappedBy = "awayTeam")
+    @ToString.Exclude
     private Set<Match> awayMatches;
 
     @CreationTimestamp
@@ -56,5 +91,24 @@ public class Team {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        // Compare entities by identity
+        //Same reference, return equal
+        if (this == obj) return true;
+        //Null, return false
+        if (obj == null) return false;
+        //unwrap proxy+type check
+        if (Hibernate.getClass(this) != Hibernate.getClass(obj)) return false;
+        Team other = (Team) obj;
+        //equal only when ids match
+        return id != null && id.equals(other.id);
+    }
 }
 

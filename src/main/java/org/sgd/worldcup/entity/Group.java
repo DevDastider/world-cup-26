@@ -1,13 +1,26 @@
 package org.sgd.worldcup.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.sgd.worldcup.enums.StageType;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -16,7 +29,9 @@ import java.util.Set;
 @Table(name = "`groups`", uniqueConstraints = {
         @UniqueConstraint(columnNames = "name")
 })
-@Data
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -36,9 +51,11 @@ public class Group {
 //    private StageType stage;
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @ToString.Exclude
     private Set<GroupTeam> groupTeams;
 
     @OneToMany(mappedBy = "group")
+    @ToString.Exclude
     private Set<Match> matches;
 
     @CreationTimestamp
@@ -48,5 +65,17 @@ public class Group {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        //Null, return false
+        if (obj == null) return false;
+        //unwrap proxy+type check
+        if (Hibernate.getClass(this) != Hibernate.getClass(obj)) return false;
+        Group other = (Group) obj;
+        //equal only when ids match
+        return id != null && id.equals(other.id);
+    }
 }
 
