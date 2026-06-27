@@ -27,6 +27,17 @@ public class TeamDTO {
     @Size(max = 50, message = "Confederation cannot exceed 50 characters")
     private String confederation;
 
+    @Size(max = 100, message = "Normalised name cannot exceed 100 characters")
+    private String nameNormalised;
+
+    @Size(max = 50, message = "Continent cannot exceed 50 characters")
+    private String continent;
+
+    @Size(max = 16, message = "Flag icon cannot exceed 16 characters")
+    private String flagIcon;
+
+    private boolean placeholder;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

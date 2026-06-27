@@ -1,6 +1,8 @@
 package org.sgd.worldcup.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +35,6 @@ public class MatchDTO {
     private MatchType matchType;
 
     @NotNull(message = "Match date is required")
-    @FutureOrPresent(message = "Match date cannot be in the past")
     private LocalDateTime matchDate;
 
     @Size(max = 200, message = "Venue cannot exceed 200 characters")
@@ -47,55 +48,6 @@ public class MatchDTO {
 
     @NotNull(message = "Match status is required")
     private MatchStatus status;
-
-    // Match Statistics
-    @DecimalMin(value = "0.0", inclusive = true)
-    @DecimalMax(value = "100.0", inclusive = true)
-    private Double homeTeamPossessionPercentage;
-
-    @DecimalMin(value = "0.0", inclusive = true)
-    @DecimalMax(value = "100.0", inclusive = true)
-    private Double awayTeamPossessionPercentage;
-
-    @Min(value = 0)
-    private Integer homeTeamShots;
-
-    @Min(value = 0)
-    private Integer awayTeamShots;
-
-    @Min(value = 0)
-    private Integer homeTeamShotsOnTarget;
-
-    @Min(value = 0)
-    private Integer awayTeamShotsOnTarget;
-
-    @Min(value = 0)
-    private Integer homeTeamFouls;
-
-    @Min(value = 0)
-    private Integer awayTeamFouls;
-
-    @Min(value = 0)
-    @Max(value = 11)
-    private Integer homeTeamYellowCards;
-
-    @Min(value = 0)
-    @Max(value = 11)
-    private Integer awayTeamYellowCards;
-
-    @Min(value = 0)
-    @Max(value = 11)
-    private Integer homeTeamRedCards;
-
-    @Min(value = 0)
-    @Max(value = 11)
-    private Integer awayTeamRedCards;
-
-    @Min(value = 0)
-    private Integer homeTeamCorners;
-
-    @Min(value = 0)
-    private Integer awayTeamCorners;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

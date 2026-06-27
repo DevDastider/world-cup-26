@@ -1,5 +1,6 @@
 package org.sgd.worldcup.dto;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,19 +37,17 @@ public class PlayerDTO {
     @PastOrPresent(message = "Date of birth cannot be in the future")
     private LocalDate dateOfBirth;
 
-    @Min(value = 100, message = "Height must be at least 100 cm")
-    @Max(value = 250, message = "Height cannot exceed 250 cm")
-    private Integer height;
+    @Size(max = 150, message = "Club name cannot exceed 150 characters")
+    private String clubName;
 
-    @Min(value = 30, message = "Weight must be at least 30 kg")
-    @Max(value = 150, message = "Weight cannot exceed 150 kg")
-    private Integer weight;
+    @Size(max = 3, message = "Club country code cannot exceed 3 characters")
+    private String clubCountry;
 
-    @Min(value = 0, message = "International caps cannot be negative")
-    private Integer internationalCaps;
+    @Min(value=0, message = "Tournament goals cannot be negative.")
+    private Integer tournamentGoals;
 
-    @Min(value = 0, message = "Goals in career cannot be negative")
-    private Integer goalsInCareer;
+    @Min(value=0, message = "Own goals cannot be negative.")
+    private Integer ownGoals;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

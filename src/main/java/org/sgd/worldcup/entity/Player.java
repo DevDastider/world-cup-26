@@ -84,7 +84,7 @@ public class Player {
     @Min(value=0, message = "Tournament goals cannot be negative.")
     @Builder.Default
     @Column(name = "tournament_goals", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private Integer tournamentGoals;
+    private Integer tournamentGoals = 0;
 
     @Min(value=0, message = "Own goals cannot be negative.")
     @Builder.Default

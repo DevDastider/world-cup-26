@@ -1,14 +1,13 @@
 package org.sgd.worldcup.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.sgd.worldcup.dto.GoalDTO;
 import org.sgd.worldcup.entity.Goal;
 import org.sgd.worldcup.entity.Match;
 import org.sgd.worldcup.entity.Player;
 import org.sgd.worldcup.entity.Team;
+import org.sgd.worldcup.enums.GoalType;
+import org.sgd.worldcup.enums.MatchStatus;
 import org.sgd.worldcup.exception.InvalidOperationException;
 import org.sgd.worldcup.exception.ResourceNotFoundException;
 import org.sgd.worldcup.mapper.GoalMapper;
@@ -16,6 +15,9 @@ import org.sgd.worldcup.repository.GoalRepository;
 import org.sgd.worldcup.repository.MatchRepository;
 import org.sgd.worldcup.repository.PlayerRepository;
 import org.sgd.worldcup.repository.TeamRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,15 +53,31 @@ public class GoalService {
         Team scoringTeam = teamRepository.findById(goalDTO.getScoringTeamId())
                 .orElseThrow(() -> new ResourceNotFoundException("Team not found with ID: " + goalDTO.getScoringTeamId()));
 
-        // Validate that player belongs to scoring team
-        if (!player.getTeam().getId().equals(scoringTeam.getId())) {
-            throw new InvalidOperationException("Player does not belong to the scoring team");
-        }
+        // Own goals are scored by an opposing player and credited to the beneficiary team,
+        // so the usual player belongs to scoring team in separate field.
+        boolean ownGoal = goalDTO.getGoalType() == GoalType.OWN_GOAL || goalDTO.getGoalType() == GoalType.PENALTY_OWN_GOAL;
 
         // Validate that scoring team is one of the match teams
         if (!match.getHomeTeam().getId().equals(scoringTeam.getId()) &&
             !match.getAwayTeam().getId().equals(scoringTeam.getId())) {
             throw new InvalidOperationException("Scoring team is not part of this match");
+        }
+
+        //Determine the opposing team within this match (the team that is not the beneficiary). Used to validate the
+        // own-goal scorers
+        Long homeId = match.getHomeTeam().getId();
+        Long awayId = match.getAwayTeam().getId();
+        Long opposingTeamId = scoringTeam.getId().equals(homeId) ?  awayId : homeId;
+        Long playerTeamId = player.getTeam().getId();
+
+        if(ownGoal) {
+            if (!playerTeamId.equals(opposingTeamId)) {
+                throw new InvalidOperationException("Own goal scorer must belong to opposing team");
+            }
+        } else{
+            if (!playerTeamId.equals(scoringTeam.getId())) {
+                throw new InvalidOperationException("Player does not belong to the scoring team");
+            }
         }
 
         Goal goal = goalMapper.toEntity(goalDTO);
@@ -68,6 +86,21 @@ public class GoalService {
         goal.setScoringTeam(scoringTeam);
 
         Goal savedGoal = goalRepository.save(goal);
+
+        if (ownGoal){
+            int currentOwn = player.getOwnGoals() !=null ? player.getOwnGoals() : 0;
+            player.setOwnGoals(currentOwn+1);
+        } else {
+            int current = player.getTournamentGoals() !=null ? player.getTournamentGoals() : 0;
+            player.setTournamentGoals(current+1);
+        }
+        playerRepository.save(player);
+
+        if (match.getStatus()!= MatchStatus.COMPLETED){
+            match.setStatus(MatchStatus.COMPLETED);
+            matchRepository.save(match);
+        }
+
         log.info("Goal recorded successfully with ID: {}", savedGoal.getId());
         return goalMapper.toDTO(savedGoal);
     }
@@ -130,6 +163,19 @@ public class GoalService {
         log.info("Deleting goal with ID: {}", id);
         Goal goal = goalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Goal not found with ID: " + id));
+
+        Player player = goal.getPlayer();
+        if (player!=null) {
+            boolean ownGoal = goal.getGoalType() == GoalType.OWN_GOAL || goal.getGoalType() == GoalType.PENALTY_OWN_GOAL;
+            if(ownGoal){
+                int currentOwn = player.getOwnGoals() != null ? player.getOwnGoals() : 0;
+                player.setOwnGoals(Math.max(0,currentOwn-1));
+            } else {
+                int current = player.getTournamentGoals() != null ? player.getTournamentGoals() : 0;
+                player.setTournamentGoals(Math.max(0,current+1));
+            }
+            playerRepository.save(player);
+        }
         goalRepository.delete(goal);
         log.info("Goal deleted successfully with ID: {}", id);
     }

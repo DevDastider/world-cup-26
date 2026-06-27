@@ -1,8 +1,8 @@
 package org.sgd.worldcup.mapper;
 
-import org.springframework.stereotype.Component;
 import org.sgd.worldcup.dto.TeamDTO;
 import org.sgd.worldcup.entity.Team;
+import org.springframework.stereotype.Component;
 
 @Component
 public class TeamMapper {
@@ -15,6 +15,10 @@ public class TeamMapper {
                 .name(team.getName())
                 .countryCode(team.getCountryCode())
                 .confederation(team.getConfederation())
+                .nameNormalised(team.getNameNormalised())
+                .continent(team.getContinent())
+                .flagIcon(team.getFlagIcon())
+                .placeholder(team.isPlaceholder())
                 .createdAt(team.getCreatedAt())
                 .updatedAt(team.getUpdatedAt())
                 .build();
@@ -29,6 +33,10 @@ public class TeamMapper {
                 .name(teamDTO.getName())
                 .countryCode(teamDTO.getCountryCode())
                 .confederation(teamDTO.getConfederation())
+                .nameNormalised(teamDTO.getNameNormalised())
+                .continent(teamDTO.getContinent())
+                .flagIcon(teamDTO.getFlagIcon())
+                .placeholder(teamDTO.isPlaceholder())
                 .build();
     }
 }

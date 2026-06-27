@@ -22,10 +22,10 @@ public class PlayerMapper {
                 .jerseyNumber(player.getJerseyNumber())
                 .position(player.getPosition())
                 .dateOfBirth(player.getDateOfBirth())
-                .height(player.getHeight())
-                .weight(player.getWeight())
-                .internationalCaps(player.getInternationalCaps())
-                .goalsInCareer(player.getGoalsInCareer())
+                .clubName(player.getClubName())
+                .clubCountry(player.getClubCountry())
+                .tournamentGoals(player.getTournamentGoals())
+                .ownGoals(player.getOwnGoals())
                 .createdAt(player.getCreatedAt())
                 .updatedAt(player.getUpdatedAt())
                 .build();
@@ -41,10 +41,10 @@ public class PlayerMapper {
                 .jerseyNumber(playerDTO.getJerseyNumber())
                 .position(playerDTO.getPosition())
                 .dateOfBirth(playerDTO.getDateOfBirth())
-                .height(playerDTO.getHeight())
-                .weight(playerDTO.getWeight())
-                .internationalCaps(playerDTO.getInternationalCaps())
-                .goalsInCareer(playerDTO.getGoalsInCareer())
+                .clubName(playerDTO.getClubName())
+                .clubCountry(playerDTO.getClubCountry())
+                .tournamentGoals(playerDTO.getTournamentGoals()!=null ? playerDTO.getTournamentGoals() : 0)
+                .ownGoals(playerDTO.getOwnGoals()!=null ? playerDTO.getOwnGoals() : 0)
                 .build();
     }
 }

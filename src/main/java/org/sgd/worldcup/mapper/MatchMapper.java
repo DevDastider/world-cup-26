@@ -1,9 +1,9 @@
 package org.sgd.worldcup.mapper;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.sgd.worldcup.dto.MatchDTO;
 import org.sgd.worldcup.entity.Match;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component
 public class MatchMapper {
@@ -27,20 +27,6 @@ public class MatchMapper {
                 .homeTeamGoals(match.getHomeTeamGoals())
                 .awayTeamGoals(match.getAwayTeamGoals())
                 .status(match.getStatus())
-                .homeTeamPossessionPercentage(match.getHomeTeamPossessionPercentage())
-                .awayTeamPossessionPercentage(match.getAwayTeamPossessionPercentage())
-                .homeTeamShots(match.getHomeTeamShots())
-                .awayTeamShots(match.getAwayTeamShots())
-                .homeTeamShotsOnTarget(match.getHomeTeamShotsOnTarget())
-                .awayTeamShotsOnTarget(match.getAwayTeamShotsOnTarget())
-                .homeTeamFouls(match.getHomeTeamFouls())
-                .awayTeamFouls(match.getAwayTeamFouls())
-                .homeTeamYellowCards(match.getHomeTeamYellowCards())
-                .awayTeamYellowCards(match.getAwayTeamYellowCards())
-                .homeTeamRedCards(match.getHomeTeamRedCards())
-                .awayTeamRedCards(match.getAwayTeamRedCards())
-                .homeTeamCorners(match.getHomeTeamCorners())
-                .awayTeamCorners(match.getAwayTeamCorners())
                 .createdAt(match.getCreatedAt())
                 .updatedAt(match.getUpdatedAt())
                 .build();
@@ -58,20 +44,6 @@ public class MatchMapper {
                 .homeTeamGoals(matchDTO.getHomeTeamGoals())
                 .awayTeamGoals(matchDTO.getAwayTeamGoals())
                 .status(matchDTO.getStatus())
-                .homeTeamPossessionPercentage(matchDTO.getHomeTeamPossessionPercentage())
-                .awayTeamPossessionPercentage(matchDTO.getAwayTeamPossessionPercentage())
-                .homeTeamShots(matchDTO.getHomeTeamShots())
-                .awayTeamShots(matchDTO.getAwayTeamShots())
-                .homeTeamShotsOnTarget(matchDTO.getHomeTeamShotsOnTarget())
-                .awayTeamShotsOnTarget(matchDTO.getAwayTeamShotsOnTarget())
-                .homeTeamFouls(matchDTO.getHomeTeamFouls())
-                .awayTeamFouls(matchDTO.getAwayTeamFouls())
-                .homeTeamYellowCards(matchDTO.getHomeTeamYellowCards())
-                .awayTeamYellowCards(matchDTO.getAwayTeamYellowCards())
-                .homeTeamRedCards(matchDTO.getHomeTeamRedCards())
-                .awayTeamRedCards(matchDTO.getAwayTeamRedCards())
-                .homeTeamCorners(matchDTO.getHomeTeamCorners())
-                .awayTeamCorners(matchDTO.getAwayTeamCorners())
                 .build();
     }
 }

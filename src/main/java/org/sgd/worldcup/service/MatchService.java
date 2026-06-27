@@ -1,9 +1,6 @@
 package org.sgd.worldcup.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.sgd.worldcup.dto.MatchDTO;
 import org.sgd.worldcup.entity.Group;
 import org.sgd.worldcup.entity.Match;
@@ -15,6 +12,9 @@ import org.sgd.worldcup.mapper.MatchMapper;
 import org.sgd.worldcup.repository.GroupRepository;
 import org.sgd.worldcup.repository.MatchRepository;
 import org.sgd.worldcup.repository.TeamRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,6 +32,9 @@ public class MatchService {
 
     @Autowired
     private GroupRepository groupRepository;
+
+    @Autowired
+    private GroupTeamService groupTeamService;
 
     @Autowired
     private MatchMapper matchMapper;
@@ -59,7 +62,7 @@ public class MatchService {
         match.setHomeTeam(homeTeam);
         match.setAwayTeam(awayTeam);
         match.setGroup(group);
-        match.setStatus(MatchStatus.SCHEDULED);
+        match.setStatus(matchDTO.getStatus()!=null ? matchDTO.getStatus() : MatchStatus.SCHEDULED);
 
         Match savedMatch = matchRepository.save(match);
         log.info("Match created successfully with ID: {}", savedMatch.getId());
@@ -129,23 +132,14 @@ public class MatchService {
         match.setHomeTeamGoals(matchDTO.getHomeTeamGoals());
         match.setAwayTeamGoals(matchDTO.getAwayTeamGoals());
         match.setStatus(matchDTO.getStatus());
-        match.setHomeTeamPossessionPercentage(matchDTO.getHomeTeamPossessionPercentage());
-        match.setAwayTeamPossessionPercentage(matchDTO.getAwayTeamPossessionPercentage());
-        match.setHomeTeamShots(matchDTO.getHomeTeamShots());
-        match.setAwayTeamShots(matchDTO.getAwayTeamShots());
-        match.setHomeTeamShotsOnTarget(matchDTO.getHomeTeamShotsOnTarget());
-        match.setAwayTeamShotsOnTarget(matchDTO.getAwayTeamShotsOnTarget());
-        match.setHomeTeamFouls(matchDTO.getHomeTeamFouls());
-        match.setAwayTeamFouls(matchDTO.getAwayTeamFouls());
-        match.setHomeTeamYellowCards(matchDTO.getHomeTeamYellowCards());
-        match.setAwayTeamYellowCards(matchDTO.getAwayTeamYellowCards());
-        match.setHomeTeamRedCards(matchDTO.getHomeTeamRedCards());
-        match.setAwayTeamRedCards(matchDTO.getAwayTeamRedCards());
-        match.setHomeTeamCorners(matchDTO.getHomeTeamCorners());
-        match.setAwayTeamCorners(matchDTO.getAwayTeamCorners());
 
         Match updatedMatch = matchRepository.save(match);
         log.info("Match result updated successfully for match ID: {}", id);
+
+        if (updatedMatch.getGroup()!=null) {
+            groupTeamService.recalculateStandings(updatedMatch.getGroup().getId());
+        }
+
         return matchMapper.toDTO(updatedMatch);
     }
 

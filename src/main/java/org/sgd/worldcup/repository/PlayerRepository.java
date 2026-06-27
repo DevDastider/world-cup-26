@@ -23,14 +23,14 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     @Query("SELECT p FROM Player p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     List<Player> searchByName(@Param("name") String name);
 
-    @Query("SELECT p FROM Player p WHERE p.team.id = :teamId ORDER BY p.goalsInCareer DESC")
+    @Query("SELECT p FROM Player p WHERE p.team.id = :teamId ORDER BY p.tournamentGoals DESC")
     List<Player> findTopScorersByTeam(@Param("teamId") Long teamId);
 
     boolean existsByTeamIdAndJerseyNumber(Long teamId, Integer jerseyNumber);
 
     int countByTeamId(Long teamId);
 
-    @Query("SELECT p FROM Player p WHERE p.goalsInCareer > 0 ORDER BY p.goalsInCareer DESC, p.name ASC")
+    @Query("SELECT p FROM Player p WHERE p.tournamentGoals > 0 ORDER BY p.tournamentGoals DESC, p.name ASC")
     List<Player> findTopScorers();
 }
 

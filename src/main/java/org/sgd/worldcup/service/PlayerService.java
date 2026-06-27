@@ -116,10 +116,8 @@ public class PlayerService {
         player.setJerseyNumber(playerDTO.getJerseyNumber());
         player.setPosition(playerDTO.getPosition());
         player.setDateOfBirth(playerDTO.getDateOfBirth());
-        player.setHeight(playerDTO.getHeight());
-        player.setWeight(playerDTO.getWeight());
-        player.setInternationalCaps(playerDTO.getInternationalCaps());
-        player.setGoalsInCareer(playerDTO.getGoalsInCareer());
+        player.setClubName(playerDTO.getClubName());
+        player.setClubCountry(playerDTO.getClubCountry());
 
         Player updatedPlayer = playerRepository.save(player);
         log.info("Player updated successfully with ID: {}", id);

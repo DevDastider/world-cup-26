@@ -4,13 +4,21 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.sgd.worldcup.dto.ApiResponse;
 import org.sgd.worldcup.dto.TeamDTO;
 import org.sgd.worldcup.service.TeamService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -32,11 +40,20 @@ public class TeamController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all teams", description = "Retrieves a list of all teams")
-    public ResponseEntity<ApiResponse<List<TeamDTO>>> getAllTeams() {
+    @Operation(summary = "Get all teams", description = "Retrieves list of all teams")
+    public ResponseEntity<ApiResponse<List<TeamDTO>>> getAllTeams(
+            @RequestParam(name = "includePlaceholders", defaultValue = "false") boolean includePlaceholders) {
         log.info("Received request to get all teams");
-        List<TeamDTO> teams = teamService.getAllTeams();
+        List<TeamDTO> teams = teamService.getAllTeams(includePlaceholders);
         return ResponseEntity.ok(ApiResponse.success(teams, "Teams retrieved successfully"));
+    }
+
+    @GetMapping("/placeholders")
+    @Operation(summary = "Get placeholder teams", description = "Retrieves only the auto-generated placeholder teams")
+    public ResponseEntity<ApiResponse<List<TeamDTO>>> getPlaceholderTeams(){
+        log.info("Received request to get placeholder teams");
+        List<TeamDTO> teams = teamService.getPlaceholderTeams();
+        return ResponseEntity.ok(ApiResponse.success(teams, "Placeholder teams retrieved successfully"));
     }
 
     @GetMapping("/{id}")

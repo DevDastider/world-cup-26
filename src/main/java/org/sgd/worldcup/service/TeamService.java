@@ -1,15 +1,15 @@
 package org.sgd.worldcup.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.sgd.worldcup.dto.TeamDTO;
 import org.sgd.worldcup.entity.Team;
 import org.sgd.worldcup.exception.DuplicateResourceException;
 import org.sgd.worldcup.exception.ResourceNotFoundException;
 import org.sgd.worldcup.mapper.TeamMapper;
 import org.sgd.worldcup.repository.TeamRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,12 +59,24 @@ public class TeamService {
     }
 
     public List<TeamDTO> getAllTeams() {
+        return getAllTeams(false);
+    }
+
+    public List<TeamDTO> getAllTeams(boolean includePlaceholder) {
         log.info("Fetching all teams");
-        return teamRepository.findAll().stream()
+        List<Team> teams = includePlaceholder ? teamRepository.findAll() : teamRepository.findByPlaceholderFalse();
+        return teams.stream()
                 .map(teamMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
+
+    public List<TeamDTO> getPlaceholderTeams() {
+        log.info("Fetching placeholder teams");
+        return teamRepository.findByPlaceholderTrue().stream()
+                .map(teamMapper::toDTO)
+                .collect(Collectors.toList());
+    }
     public List<TeamDTO> searchTeams(String searchTerm) {
         log.info("Searching teams with term: {}", searchTerm);
         return teamRepository.searchTeams(searchTerm).stream()

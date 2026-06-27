@@ -1,10 +1,10 @@
 package org.sgd.worldcup.repository;
 
+import org.sgd.worldcup.entity.Team;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.sgd.worldcup.entity.Team;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +19,10 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     List<Team> searchTeams(@Param("searchTerm") String searchTerm);
 
     List<Team> findByConfederation(String confederation);
+
+    List<Team> findByPlaceholderFalse();
+
+    List<Team> findByPlaceholderTrue();
 
     boolean existsByCountryCode(String countryCode);
 }
