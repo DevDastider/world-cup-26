@@ -1,6 +1,9 @@
 package org.sgd.worldcup.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.sgd.worldcup.entity.Match;
+import org.sgd.worldcup.enums.MatchStatus;
+import org.sgd.worldcup.repository.MatchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +19,9 @@ import org.sgd.worldcup.repository.GroupRepository;
 import org.sgd.worldcup.repository.GroupTeamRepository;
 import org.sgd.worldcup.repository.TeamRepository;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -31,6 +36,9 @@ public class GroupTeamService {
 
     @Autowired
     private TeamRepository teamRepository;
+
+    @Autowired
+    private MatchRepository matchRepository;
 
     @Autowired
     private TeamMapper teamMapper;
@@ -131,6 +139,78 @@ public class GroupTeamService {
 
     public int getTeamsCountInGroup(Long groupId) {
         return groupTeamRepository.countByGroupId(groupId);
+    }
+
+    public void recalculateStandings(Long groupId) {
+        log.debug("Recalculating standings for group: {}", groupId);
+        List<GroupTeam> standings = groupTeamRepository.findByGroupId(groupId);
+        if (standings.isEmpty()) {
+            return;
+        }
+
+        //Index by team id and reset every tally
+        Map<Long, GroupTeam> byTeamId = standings.stream()
+                .collect(Collectors.toMap(gt-> gt.getTeam().getId(), gt->gt));
+        for (GroupTeam groupTeam : standings) {
+            groupTeam.setWins(0);
+            groupTeam.setLosses(0);
+            groupTeam.setDraws(0);
+            groupTeam.setGoalsFor(0);
+            groupTeam.setGoalsAgainst(0);
+            groupTeam.setPoints(0);
+            groupTeam.setGoalDifference(0);
+        }
+
+        //Replay completed matches
+        for (Match match: matchRepository.findByStatusAndGroupId(MatchStatus.COMPLETED, groupId)){
+            Integer homeGoals = match.getHomeTeamGoals();
+            Integer awayGoals = match.getAwayTeamGoals();
+            if (homeGoals == null || awayGoals == null || match.getHomeTeam() == null || match.getAwayTeam() == null) {
+                continue;
+            }
+
+            GroupTeam home = byTeamId.get(match.getHomeTeam().getId());
+            GroupTeam away = byTeamId.get(match.getAwayTeam().getId());
+            if (home == null || away == null) {
+                continue;
+            }
+
+            home.setGoalsFor(home.getGoalsFor() + homeGoals);
+            home.setGoalsAgainst(home.getGoalsAgainst() + awayGoals);
+            away.setGoalsFor(away.getGoalsFor() + awayGoals);
+            away.setGoalsAgainst(away.getGoalsAgainst() + homeGoals);
+
+            if (homeGoals > awayGoals) {
+                home.setWins(home.getWins() + 1);
+                away.setLosses(away.getLosses() + 1);
+            } else if (homeGoals < awayGoals) {
+                away.setWins(away.getWins() + 1);
+                home.setLosses(home.getLosses() + 1);
+            } else {
+                home.setDraws(home.getDraws() + 1);
+                away.setDraws(away.getDraws() + 1);
+            }
+        }
+
+        //Derive points and goal difference
+        for (GroupTeam groupTeam : standings) {
+            groupTeam.setPoints(groupTeam.getPoints() * 3 + groupTeam.getDraws());
+            groupTeam.setGoalDifference(groupTeam.getGoalsFor() - groupTeam.getGoalsAgainst());
+        }
+
+        //Rank: points > goal difference > goals for > less goals against
+        standings.sort(Comparator
+                .comparingInt(GroupTeam::getPoints).reversed()
+                .thenComparing(Comparator.comparingInt(GroupTeam::getGoalDifference).reversed())
+                .thenComparing(Comparator.comparingInt(GroupTeam::getGoalsFor).reversed())
+                .thenComparing(Comparator.comparingInt(GroupTeam::getGoalsAgainst)));
+
+        int position=1;
+        for (GroupTeam groupTeam : standings) {
+            groupTeam.setGroupPosition(position++);
+        }
+        groupTeamRepository.saveAll(standings);
+        log.info("Standings updated successfully for group {} ({} teams)", groupId, standings.size());
     }
 
     private GroupTeamDTO convertToDTO(GroupTeam groupTeam) {

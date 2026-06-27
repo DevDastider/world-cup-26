@@ -60,6 +60,17 @@ public class GroupController {
         return ResponseEntity.ok(ApiResponse.success(standings, "Group standings retrieved successfully"));
     }
 
+    @PostMapping("/{groupId}/standings/recalculate")
+    @Operation(summary = "Recalculate group standings",
+                description = "Recompute wins/draws/losses, goals, points, goal difference and group positions from its" +
+                        "completed matches")
+    public ResponseEntity<ApiResponse<List<GroupTeamDTO>>> recalculateStandings(@PathVariable Long groupId){
+        log.info("Received request to recalculate group standings for group: {}", groupId);
+        groupTeamService.recalculateStandings(groupId);
+        List<GroupTeamDTO> standings = groupTeamService.getGroupStandings(groupId);
+        return ResponseEntity.ok(ApiResponse.success(standings, "Groups recalculated successfully"));
+    }
+
     @GetMapping("/{groupId}/teams")
     @Operation(summary = "Get teams in group", description = "Retrieves all teams in a specific group")
     public ResponseEntity<ApiResponse<List<GroupTeamDTO>>> getTeamsByGroup(@PathVariable Long groupId) {
