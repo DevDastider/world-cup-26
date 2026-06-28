@@ -1,5 +1,6 @@
 package org.sgd.worldcup.service;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.sgd.worldcup.dto.MatchDTO;
 import org.sgd.worldcup.entity.Group;
@@ -62,7 +63,7 @@ public class MatchService {
         match.setHomeTeam(homeTeam);
         match.setAwayTeam(awayTeam);
         match.setGroup(group);
-        match.setStatus(matchDTO.getStatus()!=null ? matchDTO.getStatus() : MatchStatus.SCHEDULED);
+        match.setStatus(matchDTO.getStatus() != null ? matchDTO.getStatus() : MatchStatus.SCHEDULED);
 
         Match savedMatch = matchRepository.save(match);
         log.info("Match created successfully with ID: {}", savedMatch.getId());
@@ -136,7 +137,7 @@ public class MatchService {
         Match updatedMatch = matchRepository.save(match);
         log.info("Match result updated successfully for match ID: {}", id);
 
-        if (updatedMatch.getGroup()!=null) {
+        if (updatedMatch.getGroup() != null) {
             groupTeamService.recalculateStandings(updatedMatch.getGroup().getId());
         }
 
@@ -153,6 +154,83 @@ public class MatchService {
 
     public boolean existsById(Long id) {
         return matchRepository.existsById(id);
+    }
+
+    public MatchDTO updateMatchTeams(Long id, Long homeTeamId, Long awayTeamId) {
+        log.info("Updating teams for match ID: {} (homeTeam= {}, awayTeam={})", id, homeTeamId, awayTeamId);
+
+        Match match = matchRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Match not found with ID: " + id));
+
+        if (homeTeamId == null && awayTeamId == null) {
+            throw new InvalidOperationException("Both homeTeam and awayTeam are null");
+        }
+
+        if (homeTeamId != null) {
+            Team homeTeam = teamRepository.findById(homeTeamId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Home Team not found with ID: " + homeTeamId));
+            match.setHomeTeam(homeTeam);
+        }
+
+        if (awayTeamId != null) {
+            Team awayTeam = teamRepository.findById(awayTeamId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Away Team not found with ID: " + awayTeamId));
+            match.setAwayTeam(awayTeam);
+        }
+
+        if (match.getHomeTeam() != null && match.getAwayTeam() != null && match.getHomeTeam().getId().equals(match.getAwayTeam().getId())) {
+            throw new InvalidOperationException("Both homeTeam and awayTeam cannot be the same");
+        }
+
+        Match updated = matchRepository.save(match);
+        log.info("Match updated successfully with ID: {}", id);
+        return matchMapper.toDTO(updated);
+    }
+
+    public int resolveKnockoutSlot(Long placeholderTeamId, Long realTeamId, boolean deletePlaceholder) {
+        log.info("Resolving slot for placeholder team: {}", placeholderTeamId);
+
+        if (placeholderTeamId.equals(realTeamId)) {
+            throw new InvalidOperationException("Placeholder team id cannot be the same with real team id");
+        }
+
+        Team placeholder = teamRepository.findById(placeholderTeamId)
+                .orElseThrow(() -> new ResourceNotFoundException("Placeholder team not found with ID: " + placeholderTeamId));
+        Team real = teamRepository.findById(realTeamId)
+                .orElseThrow(() -> new ResourceNotFoundException("Real team not found with ID: " + realTeamId));
+
+        if (!placeholder.isPlaceholder()) {
+            throw new InvalidOperationException("Team " + placeholderTeamId + " is not placeholder team");
+        }
+        if (real.isPlaceholder()) {
+            throw new InvalidOperationException("Target Team " + realTeamId + " is a placeholder team");
+        }
+
+        List<Match> affected = matchRepository.findMatchesByTeamId(placeholderTeamId);
+        int repointed = 0;
+
+        for (Match match : affected) {
+            boolean changed = false;
+            if (match.getHomeTeam() != null && match.getHomeTeam().getId().equals(placeholderTeamId)) {
+                match.setHomeTeam(real);
+                changed = true;
+            }
+            if (match.getAwayTeam() != null && match.getAwayTeam().getId().equals(placeholderTeamId)) {
+                match.setAwayTeam(real);
+                changed = true;
+            }
+            if (changed) {
+                matchRepository.save(match);
+                repointed++;
+            }
+        }
+
+        if (deletePlaceholder) {
+            matchRepository.flush();
+            teamRepository.delete(placeholder);
+            log.info("Placeholder team deleted successfully with ID: {}", placeholderTeamId);
+        }
+        log.info("Resolved knockout slot for placeholder team: {}", placeholderTeamId);
+        return repointed;
     }
 }
 

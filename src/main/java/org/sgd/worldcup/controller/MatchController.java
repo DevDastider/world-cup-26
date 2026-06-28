@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.sgd.worldcup.dto.MatchTeamUpdateRequest;
+import org.sgd.worldcup.dto.ResolveSlotRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -113,6 +115,26 @@ public class MatchController {
         log.info("Received request to update match with ID: {}", id);
         MatchDTO updatedMatch = matchService.updateMatchResult(id, matchDTO);
         return ResponseEntity.ok(ApiResponse.success(updatedMatch, "Match updated successfully"));
+    }
+
+    @PatchMapping("{id}/teams")
+    @Operation(summary = "Resolve match teams",
+                description = "Re-points a match's home and/or away team to existing real teams")
+    public ResponseEntity<ApiResponse<MatchDTO>> updateMatchTeams(@PathVariable Long id,
+                                                                  @RequestBody MatchTeamUpdateRequest request){
+        log.info("Received request to update teams for match ID: {}", id);
+        MatchDTO updatedMatch = matchService.updateMatchTeams(id, request.getHomeTeamId(), request.getAwayTeamId());
+        return ResponseEntity.ok(ApiResponse.success(updatedMatch, "Match updated successfully"));
+    }
+
+    @PostMapping("/resolve-slot")
+    @Operation(summary = "Resolve a knockout slot",
+                description = "Replace a placeholder team with real qualifying team across every match")
+    public ResponseEntity<ApiResponse<Integer>> resolveKnockoutSlot(@Valid @RequestBody ResolveSlotRequest request){
+        log.info("Received request to resolve knockout slot");
+        boolean deletePlaceholder = request.getDeletePlaceholder() == null || request.getDeletePlaceholder();
+        int repointed = matchService.resolveKnockoutSlot(request.getPlaceholderTeamId(), request.getRealTeamId(), deletePlaceholder);
+        return ResponseEntity.ok(ApiResponse.success(repointed, "Knockout slot updated successfully"));
     }
 
     @DeleteMapping("/{id}")
